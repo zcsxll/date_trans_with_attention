@@ -56,21 +56,23 @@ class Model(torch.nn.Module):
             # print(i, feats.shape, decoder_h.shape, feats_2.shape)
             feats_in = torch.cat((feats,feats_2), dim=-1) # (N, 30, 128) and (N, 30, 64) --> (N, 30, 192)
             out = self.tanh(self.linear1(feats_in)) #(N, 30, 192) --> (N, 30, 32)
-            scores = self.softmax(self.linear2(out).squeeze()) #(N, 30, 32) --> (N, 30, 1) --> (N, 30)
+            scores = self.softmax(self.linear2(out)) #(N, 30, 32) --> (N, 30, 1)
             
-            feats_for_decoder = []
-            for feat, score in zip(feats, scores):
-                # print(feat.shape, score.shape)
-                feats_for_decoder.append(torch.matmul(score, feat).view(1, -1))
-            feats_for_decoder = torch.cat(feats_for_decoder).unsqueeze(1)
+            # feats_for_decoder = []
+            # for feat, score in zip(feats, scores):
+            #     # print(feat.shape, score.shape)
+            #     feats_for_decoder.append(torch.matmul(score, feat).view(1, -1))
+            # feats_for_decoder = torch.cat(feats_for_decoder).unsqueeze(1)
             # print(feats_for_decoder.shape)
+
+            feats_for_decoder = torch.mul(feats, scores).sum(axis=1).unsqueeze(1)
 
             # check the dot result
             # for b in range(4):
             #     for i in range(128):
             #         tmp1 = feats[b, :, i]
-            #         tmp2 = scores[b]
-            #         # print(tmp1.shape, tmp2.shape)
+            #         tmp2 = scores[b].squeeze()
+            #         print(tmp1.shape, tmp2.shape)
             #         tmp3 = tmp1.dot(tmp2)
             #         aa = tmp3.detach().numpy()
             #         bb = feats_for_decoder[b][0][i].detach().numpy()
