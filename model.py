@@ -15,7 +15,7 @@ class Encoder(torch.nn.Module):
         return x
 
 class Decoder(torch.nn.Module):
-    def __init__(self, in_features=128, hidden_size=64):
+    def __init__(self, in_features=128, hidden_size=128):
         super(Decoder, self).__init__()
         self.lstm = torch.nn.LSTM(input_size=in_features, hidden_size=hidden_size, num_layers=1, batch_first=True, bidirectional=False)
         self.linear = torch.nn.Linear(in_features=hidden_size, out_features=11)
@@ -33,12 +33,12 @@ class Model(torch.nn.Module):
         super(Model, self).__init__()
         self.output_len = output_len
         self.encoder = Encoder(in_features=37, hidden_size=64)
-        self.decoder = Decoder(in_features=128, hidden_size=64)
+        self.decoder = Decoder(in_features=128, hidden_size=128)
         
         #attention net
-        self.linear1 = torch.nn.Linear(in_features=128+64, out_features=32)
+        self.linear1 = torch.nn.Linear(in_features=128+128, out_features=10)
         self.tanh = torch.nn.Tanh()
-        self.linear2 = torch.nn.Linear(in_features=32, out_features=1)
+        self.linear2 = torch.nn.Linear(in_features=10, out_features=1)
         self.softmax = torch.nn.Softmax(dim=-1)
 
     def forward(self, x):
@@ -46,15 +46,15 @@ class Model(torch.nn.Module):
         每次attention都使用decoder输出的完整feature以及decoder的h（初始为0）拼起来作为attention网络的输入
         '''
         feats = self.encoder(x) #(N, 30, 128)
-        decoder_h = torch.zeros((1, feats.shape[0], 64)) #(N, 64)
-        decoder_c = torch.zeros((1, feats.shape[0], 64)) #(N, 64)
-        # print(feats.shape, decoder_h.shape)
+        decoder_h = torch.zeros((1, feats.shape[0], 128)).cuda() #(N, 128)
+        decoder_c = torch.zeros((1, feats.shape[0], 128)).cuda() #(N, 128)
+        # print(feats.shape, decoder_c.shape)
         outputs = []
         for _ in range(self.output_len):
-            feats_2 = decoder_h.transpose(0, 1) #(1, N, 64) --> (N, 1, 64)
-            feats_2 = feats_2.repeat(1, feats.shape[1], 1) #(N, 1, 64) --> (N, 30, 64), cuz feats.shape[1] is 30
-            # print(i, feats.shape, decoder_h.shape, feats_2.shape)
-            feats_in = torch.cat((feats,feats_2), dim=-1) # (N, 30, 128) and (N, 30, 64) --> (N, 30, 192)
+            feats_2 = decoder_c.transpose(0, 1) #(1, N, 128) --> (N, 1, 128)
+            feats_2 = feats_2.repeat(1, feats.shape[1], 1) #(N, 1, 128) --> (N, 30, 128), cuz feats.shape[1] is 30
+            # print(i, feats.shape, decoder_c.shape, feats_2.shape)
+            feats_in = torch.cat((feats, feats_2), dim=-1) # (N, 30, 128) and (N, 30, 128) --> (N, 30, 192)
             out = self.tanh(self.linear1(feats_in)) #(N, 30, 192) --> (N, 30, 32)
             scores = self.softmax(self.linear2(out)) #(N, 30, 32) --> (N, 30, 1)
             

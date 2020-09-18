@@ -21,8 +21,8 @@ def train(model, loss_fn, optimizer, dataloader, epoch, use_gpu=False):
 
     for step, (batch_x, batch_y) in enumerate(dataloader):
         if use_gpu:
-            batch_x.cuda()
-            batch_y.cuda()
+            batch_x = batch_x.cuda()
+            batch_y = batch_y.cuda()
         pred = model(batch_x)
         accuracy = calc_accuracy(pred.detach().cpu().numpy(), batch_y.detach().cpu().numpy())
         # print(pred.shape, batch_y.shape)
@@ -67,7 +67,7 @@ def main(gpu_ids=None):
     except Exception as e:
         print('train from the very begining, {}'.format(e))
         trained_epoch = -1
-    for epoch in range(trained_epoch+1, 40):
+    for epoch in range(trained_epoch+1, 65):
         train(model, loss_fn, optimizer, dataloader, epoch, use_gpu=True)
 
 if __name__ == '__main__':
