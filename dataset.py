@@ -43,15 +43,15 @@ def transform(human_readable, machine_readable, human_vocab, machine_vocab, huma
     # print(machine_readable)
     # print(X)
     # print(Y)
-    def zcs_human(length, idx):
+    def zcs(length, idx):
         ret = np.zeros(length)
         ret[idx] = 1
         return ret
     # Xoh = np.array(list(map(lambda x: to_categorical(x, num_classes=len(human_vocab)), X)))
-    Xoh = np.array(list(map(partial(zcs_human, len(human_vocab)), X)), dtype=np.float32)
-    # Yoh = np.array(list(map(partial(zcs_human, len(machine_vocab)), Y)), dtype=np.float32) #pytorch不需要label是onehot的
-    # print(Yoh)
-    return Xoh, np.array(Y)
+    Xoh = np.array(list(map(partial(zcs, len(human_vocab)), X)), dtype=np.float32)
+    Yoh = np.array(list(map(partial(zcs, len(machine_vocab)), Y)), dtype=np.float32) #如果使用交叉熵loss，pytorch不需要label是onehot的；通过对比发现用MSELoss更好一些
+    return Xoh, Yoh, {'human_readable':human_readable, 'machine_readable':machine_readable}
+    # return Xoh, np.array(Y)
 
 # def collate_fn(batch):
 #     batch_x, batch_y = zip(*batch)
@@ -60,12 +60,13 @@ def transform(human_readable, machine_readable, human_vocab, machine_vocab, huma
 #     return batch_x, batch_y
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, transform, n_datas=10000):
+    def __init__(self, transform, n_datas=10000, seed=12345):
         self.transform = transform
 
         self.fake = Faker()
-        Faker.seed(12345)
-        random.seed(12345)
+        if seed is not None:
+            Faker.seed(seed)
+            random.seed(seed)
 
         self.human_readable_length = 30 #the maximum length is less than 30
         self.human_vocab = set()

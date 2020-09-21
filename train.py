@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -9,6 +10,7 @@ from util import save_load as sl
 def calc_accuracy(pred, answer):
     # print(pred)
     pred = np.argmax(pred, axis=2)
+    answer = np.argmax(answer, axis=2)
     # print(pred.shape, answer.shape)
     correct = (pred == answer).astype(np.int)
     accuracy = correct.sum() / (pred.shape[0] * pred.shape[1])
@@ -19,15 +21,14 @@ def train(model, loss_fn, optimizer, dataloader, epoch, use_gpu=False):
     pbar = tqdm(total=len(dataloader), bar_format='{l_bar}{r_bar}', dynamic_ncols=True)
     pbar.set_description(f'Epoch %d' % epoch)
 
-    for step, (batch_x, batch_y) in enumerate(dataloader):
+    for step, (batch_x, batch_y, _) in enumerate(dataloader):
         if use_gpu:
             batch_x = batch_x.cuda()
             batch_y = batch_y.cuda()
         pred = model(batch_x)
         accuracy = calc_accuracy(pred.detach().cpu().numpy(), batch_y.detach().cpu().numpy())
-        # print(pred.shape, batch_y.shape)
-        loss = loss_fn(pred.transpose(1, 2), batch_y)
-        # print(step, loss)
+        # loss = loss_fn(pred.transpose(1, 2), batch_y)
+        loss = loss_fn(pred, batch_y)
 
         optimizer.zero_grad()
         loss.backward()
@@ -39,22 +40,24 @@ def train(model, loss_fn, optimizer, dataloader, epoch, use_gpu=False):
 
     pbar.close()
     
-def main(gpu_ids=None):
-    dataset = Dataset(transform=transform, n_datas=20000)
+def main(gpu_id=None):
+    dataset = Dataset(transform=transform, n_datas=10000)
     dataloader = torch.utils.data.DataLoader(dataset=dataset,
-                                            batch_size=100,
+                                            batch_size=6,
                                             shuffle=True,
-                                            num_workers=10,
+                                            num_workers=6,
                                             collate_fn=None)
 
-    model = Model(output_len=10)
-    if gpu_ids is not None:
-        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_ids
+    model = Model(output_len=10, use_gpu=True if gpu_id is not None else False)
+    if gpu_id is not None:
+        print('use gpu')
+        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
         n_gpus = torch.cuda.device_count()
-        print('use %d gpus [%s]' % (n_gpus, gpu_ids))
+        # print('use %d gpu [%s]' % (n_gpus, gpu_id))
         model = model.cuda()
-        model = torch.nn.DataParallel(model, device_ids=[i for i in range(n_gpus)])
-    loss_fn = torch.nn.CrossEntropyLoss()
+        # model = torch.nn.DataParallel(model, device_ids=[i for i in range(n_gpus)])
+    # loss_fn = torch.nn.CrossEntropyLoss()
+    loss_fn = torch.nn.MSELoss()
 
     optimizer = torch.optim.Adam(model.parameters())
 
@@ -67,8 +70,11 @@ def main(gpu_ids=None):
     except Exception as e:
         print('train from the very begining, {}'.format(e))
         trained_epoch = -1
-    for epoch in range(trained_epoch+1, 65):
-        train(model, loss_fn, optimizer, dataloader, epoch, use_gpu=True)
+    for epoch in range(trained_epoch+1, 10):
+        train(model, loss_fn, optimizer, dataloader, epoch, use_gpu=True if gpu_id is not None else False)
 
 if __name__ == '__main__':
-    main(gpu_ids = '1, 2')
+    if len(sys.argv) == 1:
+        main(gpu_id='0')
+    else:
+        main(gpu_id=None)
