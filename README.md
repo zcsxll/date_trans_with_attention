@@ -3,4 +3,4 @@ a pytorch implementation of machine translation model that translates human read
 LSTM and attention mechanism are used
 
 usage:
-    python3 train.py, if gpu is not available, python train.py no_gpu
+    python3 train.py, (if gpu is not available, python train.py no_gpu)
