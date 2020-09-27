@@ -4,10 +4,10 @@ LSTM and attention mechanism are used
 
 # usage:
 - python3 train.py (train with gpu)
-- python2 train.py no_gpu (train with cpu)
+- python3 train.py no_gpu (train with cpu)
 - Python3 test.py (test th model)
 
 # attention result
-<p align="center">
+<p align="left">
 <img src="https://github.com/zcsxll/date_trans_with_attention/blob/master/attention.png" width="600">
 </p>
