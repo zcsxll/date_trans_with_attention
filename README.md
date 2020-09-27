@@ -3,6 +3,7 @@ a pytorch implementation of machine translation model that translates human read
 LSTM and attention mechanism are used
 
 # usage:
+- rm ./checkpoint/*
 - python3 train.py (train with gpu)
 - python3 train.py no_gpu (train with cpu)
 - Python3 test.py (test th model)
