@@ -9,5 +9,5 @@ LSTM and attention mechanism are used
 
 # attention result
 <p align="center">
-<img src="https://github.com/zcsxll/date_trans_with_attention/blob/master/attention.png" width="250">
+<img src="https://github.com/zcsxll/date_trans_with_attention/blob/master/attention.png" width="600">
 </p>
