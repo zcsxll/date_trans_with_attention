@@ -50,11 +50,11 @@ class Model(torch.nn.Module):
         '''
         feats = self.encoder(x) #(N, 30, 128)
         if self.use_gpu:
-            decoder_h = torch.zeros((1, feats.shape[0], 128)).cuda() #(N, 128)
-            decoder_c = torch.zeros((1, feats.shape[0], 128)).cuda() #(N, 128)
+            decoder_h = torch.zeros((1, feats.shape[0], 128)).cuda() #(1, N, 128)
+            decoder_c = torch.zeros((1, feats.shape[0], 128)).cuda() #(1, N, 128)
         else:
-            decoder_h = torch.zeros((1, feats.shape[0], 128)) #(N, 128)
-            decoder_c = torch.zeros((1, feats.shape[0], 128)) #(N, 128)
+            decoder_h = torch.zeros((1, feats.shape[0], 128)) #(1, N, 128)
+            decoder_c = torch.zeros((1, feats.shape[0], 128)) #(1, N, 128)
         # print(feats.shape, decoder_c.shape)
         outputs = []
         self.scores_for_paint = []
