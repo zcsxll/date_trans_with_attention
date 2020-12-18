@@ -61,9 +61,9 @@ class Model(torch.nn.Module):
         for _ in range(self.output_len):
             feats_2 = decoder_c.transpose(0, 1) #(1, N, 128) --> (N, 1, 128)
             feats_2 = feats_2.repeat(1, feats.shape[1], 1) #(N, 1, 128) --> (N, 30, 128), cuz feats.shape[1] is 30
-            # print(i, feats.shape, decoder_c.shape, feats_2.shape)
-            feats_in = torch.cat((feats, feats_2), dim=-1) # (N, 30, 128) and (N, 30, 128) --> (N, 30, 192)
-            out = self.tanh(self.linear1(feats_in)) #(N, 30, 192) --> (N, 30, 10)
+            feats_in = torch.cat((feats, feats_2), dim=-1) # (N, 30, 128) and (N, 30, 128) --> (N, 30, 256)
+            # print(feats.shape, feats_2.shape, feats_in.shape)
+            out = self.tanh(self.linear1(feats_in)) #(N, 30, 256) --> (N, 30, 10)
             scores = self.softmax(self.linear2(out)) #(N, 30, 10) --> (N, 30, 1)
             # print(scores[0, :, 0])
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     model = Model(output_len=10, use_gpu=False)
     print('model size is %.3f KB' % (model.total_parameters() * 4 / 1024))
-    for step, (batch_x, batch_y) in enumerate(dataloader):
+    for step, (batch_x, batch_y, _) in enumerate(dataloader):
         pred = model(batch_x)
         print(pred.shape, batch_y.shape)
         break
